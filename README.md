@@ -39,24 +39,24 @@ The application follows clean Android design patterns, separating the presentati
 
 ```mermaid
 graph TD
-    subgraph UI Layer
+    subgraph UI ["UI Layer"]
         MA[MainActivity]
         L_Main[activity_main.xml]
         L_Item[item_file.xml]
     end
 
-    subgraph Controller & Adapter Layer
+    subgraph Controller ["Controller & Adapter Layer"]
         FLA[FileListAdapter]
         FVH[FileViewHolder]
         FItem[FileItem Model]
     end
 
-    subgraph Async Operations (Coroutines)
+    subgraph Async ["Async Operations (Coroutines)"]
         IO[Dispatchers.IO thread]
         MainThread[Dispatchers.Main thread]
     end
 
-    subgraph OS & Storage Layer
+    subgraph OS ["OS & Storage Layer"]
         Env[Environment.getExternalStorageDirectory]
         Stat[StatFs - Storage Metrics]
         FP[FileProvider - URI Shares]
