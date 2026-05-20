@@ -1,41 +1,21 @@
-# 📂 FileSim — Android File Manager App
+# FileSim
 
-[![Android SDK](https://img.shields.io/badge/Android%20SDK-API%2024%20--%2036-green?logo=android&logoColor=white&style=flat-square)](https://developer.android.com)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.0.21-purple?logo=kotlin&logoColor=white&style=flat-square)](https://kotlinlang.org)
-[![Gradle](https://img.shields.io/badge/Gradle-8.13.2-blue?logo=gradle&logoColor=white&style=flat-square)](https://gradle.org)
-[![Min SDK](https://img.shields.io/badge/Min%20SDK-API%2024%20(Nougat)-orange?style=flat-square)](https://developer.android.com/about/versions/nougat)
-[![License](https://img.shields.io/badge/License-MIT-lightgrey?style=flat-square)](LICENSE)
+A lightweight, high-performance Android file manager that computes storage utilization by file type and supports standard file system operations. Built with Kotlin, Coroutines for asynchronous directory traversal, and Glide for visual assets.
 
-**FileSim** is a modern, lightweight, and high-performance Android File Manager designed to provide users with a clean, visual representation of their device's storage alongside advanced file manipulation tools. Built in **Kotlin** utilizing **Coroutines** for non-blocking I/O and **Glide** for smooth asset loading, the app prioritizes a fluid and responsive User Experience.
+## Core Features
 
----
-
-## 🚀 Key Features
-
-*   📊 **Visual Storage Dashboard**: 
-    *   Displays real-time available and total internal storage space.
-    *   Animates storage consumption using a customized progress bar dynamically calculated on launch.
-*   🗂️ **Smart Category Breakdown**: 
-    *   Scans and groups storage contents into six color-coded classes: **Images**, **Documents**, **Music**, **Videos**, **Zipped/PDFs**, and **Unknown/Other**.
-    *   Displays calculated size in GB for each category.
-*   ⚡ **Asynchronous Directory Scanning**:
-    *   Leverages Kotlin Coroutines (`Dispatchers.IO`) to recursively calculate directories and sizes in the background.
-    *   Prevents application stutter (UI thread blockages) even when parsing folders with thousands of nested items.
-*   🔄 **Full File Lifecycle Operations (Batch & Single)**:
-    *   **Single Actions**: View Details, Rename (with file-system safety validation), and Delete.
-    *   **Batch Operations**: Long-press to activate selection mode, Select All, and perform batch **Copy**, **Paste**, **Move**, or **Delete** with confirmation check prompts.
-*   📁 **Dynamic File Viewer**:
-    *   Differentiates files and directories with custom type-specific icons (Folders, Images, Audio, Video, PDFs, Texts).
-    *   Opens files using Android's `FileProvider` with implicit Intents matching the item's MIME type (e.g., opens images in Photos, music in Audio Player).
-*   🎨 **Adaptive Dashboard Layout**:
-    *   Switch between a summary Dashboard view and a full-height list view via the "View All" layout controller.
-    *   Sleek Custom Status bar matching the theme (`#5f71f2`).
+*   **Storage Breakdown Dashboard**: Computes real-time storage metrics and groups files into six categories: Images, Documents, Music, Videos, Zipped/PDFs, and Unknown.
+*   **Asynchronous Traversal**: Runs file size calculations and directory walks recursively on `Dispatchers.IO` threads to keep the main UI thread responsive.
+*   **File Operations**: Supports single and batch actions: Copy, Paste, Move, Rename (with file-system state collision safety), and Delete (with confirmation).
+*   **Multi-Select Mode**: Long-press lists to enter selection mode, supporting individual toggles and "Select All".
+*   **Implicit Intent Launcher**: Leverages Android `FileProvider` and MIME-type detection to launch the system-default apps for images, audio, video, and text.
+*   **Collapsible UI**: Toggleable dashboard card layout that can expand to show stats or collapse to maximize screen space for file lists.
 
 ---
 
-## 📐 Architecture & Flow
+## Architecture & Flow
 
-The application follows clean Android design patterns, separating the presentation layer (`MainActivity`), list adapter and binding layer (`FileListAdapter`), data models (`FileItem`), and background task pipelines (Kotlin Coroutines).
+The codebase divides responsibilities between presentation (`MainActivity`), list management (`FileListAdapter` + `ListAdapter` with `DiffUtil`), data representation (`FileItem`), and background threads (`kotlinx.coroutines`).
 
 ```mermaid
 graph TD
@@ -45,21 +25,21 @@ graph TD
         L_Item[item_file.xml]
     end
 
-    subgraph Controller ["Controller & Adapter Layer"]
+    subgraph Controller ["Adapter & Model"]
         FLA[FileListAdapter]
         FVH[FileViewHolder]
         FItem[FileItem Model]
     end
 
-    subgraph Async ["Async Operations (Coroutines)"]
+    subgraph Threading ["Background Tasks"]
         IO[Dispatchers.IO thread]
         MainThread[Dispatchers.Main thread]
     end
 
-    subgraph OS ["OS & Storage Layer"]
+    subgraph OS ["System APIs"]
         Env[Environment.getExternalStorageDirectory]
         Stat[StatFs - Storage Metrics]
-        FP[FileProvider - URI Shares]
+        FP[FileProvider]
     end
 
     MA -->|Inflates & Binds| L_Main
@@ -79,78 +59,72 @@ graph TD
 
 ---
 
-## 🛠️ Tech Stack & Library Dependencies
+## Tech Stack & Specifications
 
-*   **Language**: [Kotlin](https://kotlinlang.org/) (JVM target 11)
-*   **Asynchronous Processing**: [Kotlinx Coroutines (Core & Android)](https://github.com/Kotlin/kotlinx.coroutines)
-*   **Image/GIF Rendering**: [Glide (v4.16.0)](https://github.com/bumptech/glide) for smooth dashboard spinner animations
-*   **UI Components**: AndroidX AppCompat, Material Design, ConstraintLayout, CardView, and RecyclerView with `ListAdapter` & `DiffUtil` optimization.
-*   **Build System**: Gradle Version `8.13.2` with Kotlin DSL & Version Catalog (`libs.versions.toml`).
+*   **Min SDK**: 24 (Android Nougat)
+*   **Target / Compile SDK**: 36
+*   **Language**: Kotlin 2.0.21 (JVM target 11)
+*   **Gradle**: 8.13.2 (with Kotlin DSL and central version catalog)
+*   **Libraries**:
+    *   `org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0` (asynchronous directory walking)
+    *   `com.github.bumptech.glide:glide:4.16.0` (dashboard asset loading)
+    *   AndroidX ConstraintLayout, RecyclerView, Material Component libraries
 
 ---
 
-## 📂 Project Structure
+## Directory Structure
 
 ```bash
 FileSim/
 ├── app/
-│   ├── build.gradle             # Module-level Gradle configuration (minSdk 24, targetSdk 36)
-│   ├── proguard-rules.pro       # Code shrinking & obfuscation rules
+│   ├── build.gradle             # Target/compile configurations & dependencies
+│   ├── proguard-rules.pro       # Code shrinking & R8 rules
 │   └── src/
-│       ├── main/
-│       │   ├── AndroidManifest.xml   # Permissions and FileProvider declaration
-│       │   ├── java/com/example/filemanagerapp/
-│       │   │   ├── MainActivity.kt       # Storage metrics, folder binding, file lifecycle
-│       │   │   ├── FileListAdapter.kt    # ListAdapter with contextual multi-select mode
-│       │   │   └── FileItem.kt           # Data class representing directory/file entry
-│       │   └── res/
-│       │       ├── layout/
-│       │       │   ├── activity_main.xml # Dashboard & operations toolbar layout
-│       │       │   └── item_file.xml     # RecyclerView item design
-│       │       └── drawable/             # Application assets and custom progress styles
-│       └── test/                # Unit & instrumented tests directories
+│       └── main/
+│           ├── AndroidManifest.xml   # Storage permissions & FileProvider declarations
+│           ├── java/com/example/filemanagerapp/
+│           │   ├── MainActivity.kt       # Application lifecycle, system API calls, permissions
+│           │   ├── FileListAdapter.kt    # ListAdapter with contextual select support
+│           │   └── FileItem.kt           # Entity data model
+│           └── res/
+│               ├── layout/
+│               │   ├── activity_main.xml # Dashboard & operations toolbar layout
+│               │   └── item_file.xml     # RecyclerView item design
+│               └── drawable/             # Graphical assets and layout backgrounds
 ├── gradle/
-│   └── libs.versions.toml       # Centralized dependency management
-├── settings.gradle              # Project settings and repository configuration
-└── gradlew                      # Executable Gradle Wrapper script
+│   └── libs.versions.toml       # Centralized version catalog
+├── settings.gradle              # Module inclusion (`:app`)
+└── gradlew                      # Gradle Wrapper script
 ```
 
 ---
 
-## 🔑 Permissions Required
+## Permissions & Storage Access
 
-Due to Android's scoped storage constraints, this application requires access permissions depending on the SDK target:
-
-1.  `android.permission.MANAGE_EXTERNAL_STORAGE`: Used to read and modify files in the shared storage directories for devices running Android 11 (API Level 30) and above.
-2.  `ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION`: Prompted dynamically in `MainActivity` if permissions are not active, redirecting the user to System Settings to grant access.
+The application requires broad file system access.
+*   `android.permission.MANAGE_EXTERNAL_STORAGE` is requested on devices running Android 11 (API Level 30) and above to perform operations outside the app's sandboxed storage.
+*   `MainActivity` checks for this at startup and fires `ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION` to prompt the system settings toggle if missing.
 
 ---
 
-## ⚙️ How to Build & Run
+## Building and Running
 
-### Prerequisites
-*   **JDK 11** or **17** configured in your environment.
-*   **Android Studio Jellyfish** (or newer) recommended.
-*   An Android Device or Emulator running **Android API Level 24+** (Nougat or above).
-
-### Build from Command Line
-To compile and assemble the debug APK, execute the following commands in the root of the workspace directory:
+### Command-Line Build
+Compile and package the debug APK using the Gradle wrapper:
 
 ```bash
-# Set execute permissions on gradlew (for macOS/Linux)
+# Grant execution rights (macOS/Linux)
 chmod +x gradlew
 
-# Clean previous builds and compile
+# Clean build and compile
 ./gradlew clean assembleDebug
 ```
 
-The compiled APK will be available in:
+The output APK will be generated at:
 `app/build/outputs/apk/debug/app-debug.apk`
 
 ---
 
-## 🤝 Contribution & License
+## License
 
-Contributions are welcome! Please feel free to open issues or submit pull requests.
-
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the MIT License.
